@@ -35,6 +35,7 @@ def main():
 
     watcher = Watcher(
         config.watch_folders(),
+        ignore_folders=config.ignore_folders(),
         upload_handler=upload_handler,
     )
     watcher.run()
