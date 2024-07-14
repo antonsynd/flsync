@@ -1,5 +1,3 @@
-import time
-
 from flsync.gdrive import UploadClient
 from pathlib import Path
 
@@ -16,7 +14,7 @@ from watchdog.events import (
 class UploadProjectHandler(PatternMatchingEventHandler):
     def __init__(self, upload_client: UploadClient):
         super().__init__(
-            regexes=[r"*.flp"], ignore_directories=True, case_sensitive=False
+            patterns=[r"*.flp"], ignore_directories=True, case_sensitive=False
         )
 
         self._upload_client: UploadClient = upload_client
@@ -35,7 +33,11 @@ class UploadProjectHandler(PatternMatchingEventHandler):
 
 
 class Watcher:
-    def __init__(self, watch_folders: list[Path], upload_handler: UploadProjectHandler):
+    def __init__(
+        self,
+        watch_folders: list[Path],
+        upload_handler: UploadProjectHandler,
+    ):
         self._watch_folders: list[Path] = watch_folders
         self._observer = Observer()
         self._upload_handler: UploadProjectHandler = upload_handler
@@ -46,10 +48,6 @@ class Watcher:
 
         self._observer.start()
 
-        try:
-            while True:
-                time.sleep(5)
-        except KeyboardInterrupt:
-            self._observer.stop()
-
+    def stop(self):
+        self._observer.stop()
         self._observer.join()
