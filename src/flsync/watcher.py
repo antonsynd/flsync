@@ -6,7 +6,6 @@ from flsync.gdrive import UploadClient
 from watchdog.observers import Observer
 from watchdog.events import (
     FileMovedEvent,
-    FileSystemEvent,
     FileModifiedEvent,
     FileCreatedEvent,
     PatternMatchingEventHandler,

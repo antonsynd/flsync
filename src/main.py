@@ -29,6 +29,7 @@ def main():
 
     upload_client = UploadClient(
         service_client_json_file_path=config.service_account_client_json_file_path(),
+        owner_email=config.owner_email(),
         destination_folder_id=config.destination_folder_id(),
     )
     upload_handler = UploadProjectHandler(upload_client=upload_client)
