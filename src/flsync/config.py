@@ -12,6 +12,7 @@ class Config:
         watch_folders: list[Path],
         ignore_folders: list[Path],
         owner_email: str,
+        socket_port: int,
         sync_interval_seconds: float = 1,
     ) -> None:
         self._service_account_client_json_file_path: Path = (
@@ -20,6 +21,7 @@ class Config:
         self._watch_folders: set[Path] = set(watch_folders)
         self._ignore_folders: set[Path] = set(ignore_folders)
         self._owner_email: str = owner_email
+        self._socket_port: int = socket_port
         self._destination_folder_id: str = destination_folder_id
         self._sync_interval_seconds: float = sync_interval_seconds
 
@@ -77,11 +79,18 @@ class Config:
 
         self._sync_interval_seconds: float = v
 
+    def socket_port(self, v: Optional[int] = None) -> Optional[int]:
+        if not v:
+            return self._socket_port
+
+        self._socket_port: int = v
+
     @classmethod
     def read_from_json(cls, input_path: Path) -> "Config":
         with open(input_path, mode="r", encoding="utf-8") as input_file:
             input_json: dict[str, Any] = json.load(input_file)
 
+            socket_port: int = input_json["socket_port"]
             owner_email: str = input_json["owner_email"]
             destination_folder_id: str = input_json["destination_folder_id"]
             service_account_client_json_file_path: Path = Path(
@@ -101,6 +110,7 @@ class Config:
                 destination_folder_id=destination_folder_id,
                 watch_folders=watch_folders,
                 ignore_folders=ignore_folders,
+                socket_port=socket_port,
                 owner_email=owner_email,
                 sync_interval_seconds=sync_interval_seconds,
             )
@@ -110,6 +120,7 @@ class Config:
             "service_account_client_json_file_path": str(
                 self._service_account_client_json_file_path
             ),
+            "socket_port": self._socket_port,
             "owner_email": self._owner_email,
             "destination_folder_id": self._destination_folder_id,
             "watch_folders": [str(x) for x in self._watch_folders],

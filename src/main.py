@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import time
-
-from flsync.watcher import Watcher, UploadProjectHandler
-from flsync.config import Config
-from flsync.gdrive import UploadClient
+import sys
 
 from pathlib import Path
+from typing import Optional
+
+from flsync.config import Config
+from flsync.worker import start_worker, stop_worker
 
 # Set up logging
 logging.basicConfig(
@@ -18,43 +18,58 @@ DEFAULT_CONFIG_PATH: Path = Path("~/.flsync_config.json").expanduser()
 
 
 def main():
-    args: argparse.Namespace = parse_args()
-    # config_path: Optional[Path] = args.config_path
-    config_path = None
+    parser: argparse.ArgumentParser = create_arg_parser()
+    args: argparse.Namespace = parser.parse_args()
+    config_path: Optional[Path] = args.config
 
     if not config_path:
         config_path = DEFAULT_CONFIG_PATH
 
     config: Config = Config.read_from_json(input_path=config_path)
 
-    upload_client = UploadClient(
-        service_client_json_file_path=config.service_account_client_json_file_path(),
-        owner_email=config.owner_email(),
-        destination_folder_id=config.destination_folder_id(),
-    )
-    upload_handler = UploadProjectHandler(upload_client=upload_client)
+    command: str = args.command
 
-    watcher = Watcher(
-        config.watch_folders(),
-        ignore_folders=config.ignore_folders(),
-        upload_handler=upload_handler,
-    )
-    watcher.run()
+    if command == "start":
+        socket_port: Optional[int] = args.socket_port
 
-    try:
-        while True:
-            time.sleep(config.sync_interval_seconds())
-    finally:
-        watcher.stop()
+        start(socket_port=socket_port, config=config)
+    elif command == "stop":
+        socket_port: Optional[int] = args.socket_port
+
+        stop(config=config, socket_port=socket_port)
+    elif command == "help":
+        parser.print_help()
+    else:
+        print(f"Unknown command {command}", flush=True, file=sys.stderr)
+        sys.exit(1)
 
 
-def parse_args() -> argparse.Namespace:
+def create_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    # subparsers: argparse._SubParsersAction = parser.add_subparsers("command")
+    parser.add_argument("--config", type=Path, default=None)
+    subparsers: argparse._SubParsersAction = parser.add_subparsers(dest="command")
 
-    # run_subparser = subparsers.add_parser("run")
+    start_subparser = subparsers.add_parser("start")
+    start_subparser.add_argument("--socket-port", type=int, default=None)
 
-    return parser.parse_args()
+    stop_subparser = subparsers.add_parser("stop")
+    stop_subparser.add_argument("--socket-port", type=int, default=None)
+
+    subparsers.add_parser("help")
+
+    return parser
+
+
+def start(config: Config, socket_port: Optional[int]) -> None:
+    socket_port: int = socket_port if socket_port else config.socket_port()
+
+    start_worker(socket_port=socket_port, config=config)
+
+
+def stop(config: Config, socket_port: Optional[int]) -> None:
+    socket_port: int = socket_port if socket_port else config.socket_port()
+
+    stop_worker(socket_port=socket_port, config=config)
 
 
 if __name__ == "__main__":

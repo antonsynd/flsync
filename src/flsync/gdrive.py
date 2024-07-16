@@ -1,11 +1,8 @@
 from pathlib import Path
+from typing import Optional
 
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-
-# from googleapiclient.discovery import build
-
-from typing import Optional
 
 
 class UploadClient:
@@ -27,13 +24,6 @@ class UploadClient:
         self._gauth = GoogleAuth(settings=settings)
         self._gauth.ServiceAuth()
         self._drive = GoogleDrive(self._gauth)
-
-        self._service = build("drive", "v3", credentials=self._gauth.credentials)
-        self._owner_permissions = {
-            "type": "user",
-            "role": "owner",
-            "emailAddress": owner_email,
-        }
 
     def try_get_file_id_for_file_name(self, file_name: str) -> Optional[str]:
         file_list = self._drive.ListFile(
@@ -63,8 +53,3 @@ class UploadClient:
         file_drive.SetContentFile(file_path)
         file_drive.Upload()
         file_drive.FetchMetadata(fields="id")
-
-        # file_id: str = file_drive.metadata["id"]
-        # self._service.permissions().create(
-        #     fileId=file_id, body=self._owner_permissions, transferOwnership=True
-        # ).execute()
