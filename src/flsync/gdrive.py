@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -14,7 +14,7 @@ class UploadClient:
     ) -> None:
         self._destination_folder_id: str = destination_folder_id
 
-        settings: "dict[str, str]" = {
+        settings: Mapping[str, str] = {
             "client_config_backend": "service",
             "service_config": {
                 "client_json_file_path": str(service_client_json_file_path),

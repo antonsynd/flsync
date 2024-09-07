@@ -1,7 +1,7 @@
 import json
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import AbstractSet, Any, Mapping, Optional
 
 
 class Config:
@@ -9,8 +9,8 @@ class Config:
         self,
         service_account_client_json_file_path: Path,
         destination_folder_id: str,
-        watch_folders: list[Path],
-        ignore_folders: list[Path],
+        watch_folders: Mapping[Path],
+        ignore_folders: Mapping[Path],
         owner_email: str,
         socket_port: int,
         sync_interval_seconds: float = 1,
@@ -18,14 +18,14 @@ class Config:
         self._service_account_client_json_file_path: Path = (
             service_account_client_json_file_path
         )
-        self._watch_folders: set[Path] = set(watch_folders)
-        self._ignore_folders: set[Path] = set(ignore_folders)
+        self._watch_folders: AbstractSet[Path] = set(watch_folders)
+        self._ignore_folders: AbstractSet[Path] = set(ignore_folders)
         self._owner_email: str = owner_email
         self._socket_port: int = socket_port
         self._destination_folder_id: str = destination_folder_id
         self._sync_interval_seconds: float = sync_interval_seconds
 
-    def watch_folders(self) -> list[Path]:
+    def watch_folders(self) -> Mapping[Path]:
         return self._watch_folders
 
     def add_watch_folder(self, watch_folder: Path) -> None:
@@ -39,7 +39,7 @@ class Config:
         except KeyError:
             return False
 
-    def ignore_folders(self) -> list[Path]:
+    def ignore_folders(self) -> Mapping[Path]:
         return self._ignore_folders
 
     def add_ignore_folder(self, ignore_folder: Path) -> None:
@@ -88,7 +88,7 @@ class Config:
     @classmethod
     def read_from_json(cls, input_path: Path) -> "Config":
         with open(input_path, mode="r", encoding="utf-8") as input_file:
-            input_json: dict[str, Any] = json.load(input_file)
+            input_json: Mapping[str, Any] = json.load(input_file)
 
             socket_port: int = input_json["socket_port"]
             owner_email: str = input_json["owner_email"]
@@ -97,10 +97,10 @@ class Config:
                 input_json["service_account_client_json_file_path"]
             )
 
-            watch_folders: list[Path] = [
+            watch_folders: Mapping[Path] = [
                 Path(x) for x in input_json.get("watch_folders", [])
             ]
-            ignore_folders: list[Path] = [
+            ignore_folders: Mapping[Path] = [
                 Path(x) for x in input_json.get("ignore_folders", [])
             ]
             sync_interval_seconds: float = float(input_json["sync_interval_seconds"])
@@ -116,7 +116,7 @@ class Config:
             )
 
     def write_to_json(self, output_path: Path) -> None:
-        output_json: dict[str, Any] = {
+        output_json: Mapping[str, Any] = {
             "service_account_client_json_file_path": str(
                 self._service_account_client_json_file_path
             ),
